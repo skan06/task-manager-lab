@@ -1,0 +1,10 @@
+severity: high
+skip-rules:
+  - AWS.LambdaFunction.IAM.1
+scan:
+  iac-providers:
+    - terraform
+  directories:
+    - ../modules/backend
+    - ../modules/frontend
+    - ../

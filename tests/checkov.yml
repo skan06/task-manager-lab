@@ -1,0 +1,9 @@
+framework: terraform
+directory:
+  - ../modules/backend
+  - ../modules/frontend
+  - ../
+skip-check:
+  - CKV_AWS_115 # Skip Lambda concurrency check
+  - CKV_AWS_116 # Skip Lambda DLQ check
+soft-fail: true

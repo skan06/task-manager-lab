@@ -1,0 +1,43 @@
+# GitHub Actions workflow for deploying Terraform infrastructure
+name: Terraform Deploy
+on:
+  push:
+    branches: [ main ] # Trigger on push to main branch
+jobs:
+  deploy:
+    runs-on: ubuntu-latest # Use Ubuntu runner
+    steps:
+      # Checkout the repository
+      - uses: actions/checkout@v3
+
+      # Set up Terraform
+      - uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.6.0 # Specify Terraform version
+
+      # Configure AWS credentials
+      - uses: aws-actions/configure-aws-credentials@v2
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} # AWS access key from secrets
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # AWS secret key from secrets
+          aws-region: us-east-1 # AWS region
+
+      # Initialize Terraform
+      - name: Terraform Init
+        run: terraform init
+
+      # Zip the Lambda function code
+      - name: Zip Lambda Function
+        run: zip lambda_function.zip lambda_function.py
+
+      # Apply Terraform configuration
+      - name: Terraform Apply
+        run: terraform apply -auto-approve
+
+      # Run Terrascan for security scanning
+      - name: Run Terrascan
+        run: terrascan scan -t aws
+
+      # Run Checkov for compliance checks
+      - name: Run Checkov
+        run: checkov -d . --framework terraform

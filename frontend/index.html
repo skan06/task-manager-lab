@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Task Manager</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <h1>Task Manager</h1>
+  <form id="task-form">
+    <input type="text" id="task-description" placeholder="Enter task description" required />
+    <button type="submit">Add Task</button>
+  </form>
+  <ul id="task-list"></ul>
+  <script>
+    const apiEndpoint = "${apiEndpoint}";
+    const taskForm = document.getElementById("task-form");
+    const taskList = document.getElementById("task-list");
+    async function loadTasks() {
+      const res = await fetch(apiEndpoint + "/tasks");
+      const tasks = await res.json();
+      taskList.innerHTML = "";
+      tasks.forEach(function(item) {
+        const li = document.createElement("li");
+        li.innerHTML = item.description + ' <button onclick="updateTask(\'' + item.task_id + '\')">Complete</button> <button onclick="deleteTask(\'' + item.task_id + '\')">Delete</button>';
+        taskList.appendChild(li);
+      });
+    }
+    taskForm.addEventListener("submit", async function(e) {
+      e.preventDefault();
+      const description = document.getElementById("task-description").value;
+      await fetch(apiEndpoint + "/tasks", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ description })
+      });
+      document.getElementById("task-description").value = "";
+      loadTasks();
+    });
+    async function updateTask(taskId) {
+      await fetch(apiEndpoint + "/tasks/" + taskId, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ completed: true })
+      });
+      loadTasks();
+    }
+    async function deleteTask(taskId) {
+      await fetch(apiEndpoint + "/tasks/" + taskId, { method: "DELETE" });
+      loadTasks();
+    }
+    loadTasks();
+  </script>
+</body>
+</html>
