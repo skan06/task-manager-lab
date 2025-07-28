@@ -4,6 +4,6 @@ directory:
   - ../modules/frontend
   - ../
 skip-check:
-  - CKV_AWS_115 # Skip Lambda concurrency check
-  - CKV_AWS_116 # Skip Lambda DLQ check
+  - CKV_AWS_115
+  - CKV_AWS_116
 soft-fail: true
