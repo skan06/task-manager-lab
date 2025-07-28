@@ -34,10 +34,28 @@ jobs:
       - name: Terraform Apply
         run: terraform apply -auto-approve
 
-      # Run Terrascan for security scanning
-      - name: Run Terrascan
-        run: terrascan scan -t aws
+      # Install Python and Checkov
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.12' # Specify Python version
+
+      # Install Checkov
+      - name: Install Checkov
+        run: pip install checkov
 
       # Run Checkov for compliance checks
       - name: Run Checkov
-        run: checkov -d . --framework terraform
+        run: checkov -f tests/checkov.yml
+
+      # Install Terrascan
+      - name: Install Terrascan
+        run: |
+          curl -L https://github.com/tenable/terrascan/releases/download/v1.19.9/terrascan_1.19.9_Linux_x86_64.tar.gz -o terrascan.tar.gz
+          tar -xzf terrascan.tar.gz
+          chmod +x terrascan
+          sudo mv terrascan /usr/local/bin/
+
+      # Run Terrascan for security scanning
+      - name: Run Terrascan
+        run: terrascan scan -c tests/terrascan.yml
