@@ -48,7 +48,7 @@ jobs:
       - name: Run Checkov
         run: checkov -f tests/checkov.yml
 
-      # Install Terrascan (commented out to bypass persistent failures)
+      # Install Terrascan (disabled due to persistent failures in v1.19.9)
       # - name: Install Terrascan
       #   run: |
       #     curl -L https://github.com/tenable/terrascan/releases/download/v1.19.9/terrascan_1.19.9_Linux_x86_64.tar.gz -o terrascan.tar.gz
@@ -56,6 +56,6 @@ jobs:
       #     chmod +x terrascan
       #     sudo mv terrascan /usr/local/bin/
 
-      # Run Terrascan for security scanning (commented out to bypass persistent failures)
+      # Run Terrascan for security scanning (disabled due to persistent failures)
       # - name: Run Terrascan
       #   run: terrascan scan -c tests/terrascan.yml

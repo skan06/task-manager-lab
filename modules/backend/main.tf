@@ -65,14 +65,19 @@ resource "aws_iam_role_policy" "lambda_dynamodb_policy" {
           "dynamodb:PutItem",
           "dynamodb:UpdateItem",
           "dynamodb:DeleteItem",
-          "dynamodb:Scan"
-        ]                                         # Permissions for DynamoDB operations
+          "dynamodb:Scan",
+          "dynamodb:Query"                        # Added Query for additional DynamoDB operations
+        ]
         Resource = aws_dynamodb_table.task_table.arn # Access to DynamoDB table
       },
       {
         Effect   = "Allow"
-        Action   = ["kms:Encrypt", "kms:Decrypt"] # KMS permissions for encryption
-        Resource = aws_kms_key.lambda_key.arn     # KMS key ARN
+        Action   = [
+          "kms:Encrypt",
+          "kms:Decrypt",
+          "kms:GenerateDataKey"                  # Added for KMS key operations
+        ]
+        Resource = aws_kms_key.lambda_key.arn    # KMS key ARN
       },
       {
         Effect = "Allow"
@@ -82,9 +87,23 @@ resource "aws_iam_role_policy" "lambda_dynamodb_policy" {
           "ec2:DeleteNetworkInterface"           # Delete ENIs when Lambda terminates
         ]
         Resource = "*"                           # Allow on all resources (required for ENI)
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "logs:CreateLogStream",               # Ensure log stream creation
+          "logs:PutLogEvents"                   # Ensure log event writing
+        ]
+        Resource = "*"                          # Allow on all CloudWatch logs
       }
     ]
   })
+}
+
+# Create a CloudWatch log group for Lambda logs
+resource "aws_cloudwatch_log_group" "lambda_logs" {
+  name              = "/aws/lambda/task-manager-function" # Log group for Lambda
+  retention_in_days = 7                                  # Retain logs for 7 days
 }
 
 # Create a Lambda function for task management
@@ -96,22 +115,28 @@ resource "aws_lambda_function" "task_manager_lambda" {
   source_code_hash = filebase64sha256("${path.module}/../../lambda_function.zip") # Code hash for updates
   role             = aws_iam_role.lambda_exec_role.arn                # IAM role for Lambda
   environment {
-    variables = { TABLE_NAME = aws_dynamodb_table.task_table.name }   # Pass DynamoDB table name
+    variables = {
+      TABLE_NAME = aws_dynamodb_table.task_table.name               # Pass DynamoDB table name
+      AWS_REGION = "us-east-1"                                     # Pass region for boto3 client
+    }
   }
   kms_key_arn = aws_kms_key.lambda_key.arn                           # Encrypt environment variables
   tracing_config {
     mode = "Active"                                                 # Enable AWS X-Ray tracing
   }
+  timeout       = 30                                                # Increase timeout to 30 seconds
+  memory_size   = 256                                               # Increase memory for better performance
   dynamic "vpc_config" {
     for_each = length(var.subnet_ids) > 0 && length(var.security_group_ids) > 0 ? [1] : [] # Only include if subnets and SGs provided
     content {
-      subnet_ids         = var.subnet_ids                             # Subnets for VPC configuration
-      security_group_ids = var.security_group_ids                     # Security groups for VPC
+      subnet_ids         = var.subnet_ids                           # Subnets for VPC configuration
+      security_group_ids = var.security_group_ids                   # Security groups for VPC
     }
   }
   depends_on = [
-    aws_iam_role_policy_attachment.lambda_logs,                      # Ensure IAM role policy is attached
-    aws_iam_role_policy.lambda_dynamodb_policy                       # Ensure DynamoDB and EC2 policy is attached
+    aws_iam_role_policy_attachment.lambda_logs,                    # Ensure IAM role policy is attached
+    aws_iam_role_policy.lambda_dynamodb_policy,                    # Ensure DynamoDB and EC2 policy is attached
+    aws_cloudwatch_log_group.lambda_logs                           # Ensure log group is created
   ]
 }
 
@@ -126,7 +151,7 @@ resource "aws_apigatewayv2_api" "task_api" {
   name          = "task-manager-api"                                # API name
   protocol_type = "HTTP"                                            # HTTP protocol for API Gateway
   cors_configuration {
-    allow_origins = [var.s3_website_endpoint != "" ? "http://${var.s3_website_endpoint}" : "http://localhost"] # Restrict to S3 website or localhost for testing
+    allow_origins = [var.s3_website_endpoint != "" ? "http://${var.s3_website_endpoint}" : "http://localhost"] # Restrict to S3 website or localhost
     allow_methods = ["OPTIONS", "POST", "GET", "PUT", "DELETE"]    # Allowed HTTP methods
     allow_headers = ["Content-Type", "Authorization"]              # Allowed headers
     expose_headers = []                                            # No exposed headers
@@ -186,6 +211,7 @@ resource "aws_apigatewayv2_stage" "default" {
       routeKey       = "$context.routeKey"                       # Log route key
       status         = "$context.status"                         # Log status code
       protocol       = "$context.protocol"                       # Log protocol
+      errorMessage   = "$context.error.message"                  # Log error messages
     })
   }
 }
