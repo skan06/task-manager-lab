@@ -1,9 +1,11 @@
-framework: terraform
+# Configuration for Checkov to scan Terraform files
+framework:
+  - terraform # Specify Terraform framework
 directory:
-  - ../modules/backend
-  - ../modules/frontend
-  - ../
+  - ../modules/backend # Scan backend module
+  - ../modules/frontend # Scan frontend module
+  - ../ # Scan root directory
 skip-check:
-  - CKV_AWS_115
-  - CKV_AWS_116
-soft-fail: true
+  - CKV_AWS_115 # Skip Lambda concurrency check
+  - CKV_AWS_116 # Skip Lambda DLQ check
+soft-fail: true # Report failures but don’t block

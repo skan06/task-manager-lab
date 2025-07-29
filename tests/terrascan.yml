@@ -1,11 +1,11 @@
----
-severity_level: "HIGH"
+# Configuration for Terrascan to scan Terraform files
+severity_level: HIGH # Only report HIGH severity violations
 skip_rules:
-  - AWS.LambdaFunction.IAM.1
+  - AWS.LambdaFunction.IAM.1 # Skip KMS check if unresolved
 scan_options:
   iac_providers:
     - terraform
   directories:
-    - ../modules/backend
-    - ../modules/frontend
-    - ../
+    - ../modules/backend # Scan backend module
+    - ../modules/frontend # Scan frontend module
+    - ../ # Scan root directory
