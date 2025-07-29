@@ -51,7 +51,7 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole" # Policy for CloudWatch logging
 }
 
-# Custom policy to allow Lambda to interact with DynamoDB and KMS
+# Custom policy to allow Lambda to interact with DynamoDB, KMS, and EC2 for VPC
 resource "aws_iam_role_policy" "lambda_dynamodb_policy" {
   name = "lambda-dynamodb-policy"                # Policy name
   role = aws_iam_role.lambda_exec_role.id        # Attach to Lambda role
@@ -73,6 +73,15 @@ resource "aws_iam_role_policy" "lambda_dynamodb_policy" {
         Effect   = "Allow"
         Action   = ["kms:Encrypt", "kms:Decrypt"] # KMS permissions for encryption
         Resource = aws_kms_key.lambda_key.arn     # KMS key ARN
+      },
+      {
+        Effect = "Allow"
+        Action = [
+          "ec2:CreateNetworkInterface",          # Create ENI for Lambda in VPC
+          "ec2:DescribeNetworkInterfaces",       # Describe ENIs for management
+          "ec2:DeleteNetworkInterface"           # Delete ENIs when Lambda terminates
+        ]
+        Resource = "*"                           # Allow on all resources (required for ENI)
       }
     ]
   })
@@ -102,7 +111,7 @@ resource "aws_lambda_function" "task_manager_lambda" {
   }
   depends_on = [
     aws_iam_role_policy_attachment.lambda_logs,                      # Ensure IAM role policy is attached
-    aws_iam_role_policy.lambda_dynamodb_policy                       # Ensure DynamoDB policy is attached
+    aws_iam_role_policy.lambda_dynamodb_policy                       # Ensure DynamoDB and EC2 policy is attached
   ]
 }
 
