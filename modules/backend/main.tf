@@ -116,7 +116,6 @@ resource "aws_lambda_function" "task_manager_lambda" {
   environment {
     variables = {
       TABLE_NAME = aws_dynamodb_table.task_table.name               # Pass DynamoDB table name
-      AWS_REGION = "us-east-1"                                     # Pass region for boto3 client
     }
   }
   kms_key_arn = aws_kms_key.lambda_key.arn                           # Encrypt environment variables
