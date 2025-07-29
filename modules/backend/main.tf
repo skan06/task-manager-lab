@@ -181,8 +181,3 @@ resource "aws_lambda_permission" "apigw_invoke" {
   principal     = "apigateway.amazonaws.com"
   source_arn    = "${aws_apigatewayv2_api.task_api.execution_arn}/*/*"
 }
-
-# Output the API endpoint
-output "api_endpoint" {
-  value = aws_apigatewayv2_api.task_api.api_endpoint
-}
