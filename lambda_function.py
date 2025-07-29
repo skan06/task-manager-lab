@@ -1,51 +1,91 @@
-# Import required Python libraries
 import json
 import boto3
 import os
 import uuid
 
-# Initialize DynamoDB resource
-dynamodb = boto3.resource("dynamodb")
-table = dynamodb.Table(os.environ["TABLE_NAME"]) # Get table name from environment variable
+# Initialize DynamoDB client
+dynamodb = boto3.resource('dynamodb')
+table_name = os.environ.get('TABLE_NAME', 'task-manager')  # Fallback to 'task-manager' if not set
+table = dynamodb.Table(table_name)
 
-# Lambda handler function
 def lambda_handler(event, context):
-    # Extract path and HTTP method from the event
-    path = event.get("rawPath", "")
-    method = event.get("requestContext", {}).get("http", {}).get("method", "")
-    
-    # Handle POST /tasks to create a new task
-    if method == "POST" and path == "/tasks":
-        body = json.loads(event.get("body", "{}")) # Parse request body
-        description = body.get("description") # Get task description
-        if not description:
-            return {"statusCode": 400, "body": json.dumps({"error": "Missing 'description' in request"})}
-        task_id = str(uuid.uuid4()) # Generate unique task ID
-        table.put_item(Item={"task_id": task_id, "description": description, "completed": False}) # Save to DynamoDB
-        return {"statusCode": 200, "body": json.dumps({"task_id": task_id})}
-    
-    # Handle GET /tasks to list all tasks
-    if method == "GET" and path == "/tasks":
-        response = table.scan() # Scan DynamoDB table for all items
-        return {"statusCode": 200, "body": json.dumps(response["Items"])}
-    
-    # Handle PUT /tasks/{task_id} to update a task
-    if method == "PUT" and path.startswith("/tasks/"):
-        task_id = path.split("/")[-1] # Extract task ID from path
-        body = json.loads(event.get("body", "{}")) # Parse request body
-        completed = body.get("completed", False) # Get completed status
-        table.update_item( # Update task in DynamoDB
-            Key={"task_id": task_id},
-            UpdateExpression="SET completed = :c",
-            ExpressionAttributeValues={":c": completed}
-        )
-        return {"statusCode": 200, "body": json.dumps({"message": "Task updated"})}
-    
-    # Handle DELETE /tasks/{task_id} to delete a task
-    if method == "DELETE" and path.startswith("/tasks/"):
-        task_id = path.split("/")[-1] # Extract task ID from path
-        table.delete_item(Key={"task_id": task_id}) # Delete task from DynamoDB
-        return {"statusCode": 200, "body": json.dumps({"message": "Task deleted"})}
-    
-    # Return 404 for unknown routes
-    return {"statusCode": 404, "body": json.dumps({"error": "Route not found"})}
+    """
+    Handle API Gateway requests for task management.
+    Supports POST, GET, PUT, DELETE methods for /tasks and /tasks/{task_id} routes.
+    """
+    try:
+        # Log the incoming event for debugging
+        print(f"Event: {json.dumps(event)}")
+        
+        http_method = event.get('httpMethod')
+        path = event.get('path', '')
+        
+        if http_method == 'POST' and path == '/tasks':
+            body = json.loads(event.get('body', '{}'))
+            description = body.get('description')
+            if not description:
+                return {
+                    'statusCode': 400,
+                    'body': json.dumps({'message': 'Missing description in request body'})
+                }
+            task_id = str(uuid.uuid4())
+            table.put_item(Item={'task_id': task_id, 'description': description})
+            return {
+                'statusCode': 200,
+                'body': json.dumps({'task_id': task_id, 'description': description}),
+                'headers': {'Content-Type': 'application/json'}
+            }
+        
+        elif http_method == 'GET' and path == '/tasks':
+            response = table.scan()
+            items = response.get('Items', [])
+            return {
+                'statusCode': 200,
+                'body': json.dumps(items),
+                'headers': {'Content-Type': 'application/json'}
+            }
+        
+        elif http_method == 'PUT' and path.startswith('/tasks/'):
+            task_id = path.split('/')[-1]
+            body = json.loads(event.get('body', '{}'))
+            description = body.get('description')
+            if not description:
+                return {
+                    'statusCode': 400,
+                    'body': json.dumps({'message': 'Missing description in request body'})
+                }
+            table.update_item(
+                Key={'task_id': task_id},
+                UpdateExpression='SET description = :desc',
+                ExpressionAttributeValues={':desc': description}
+            )
+            return {
+                'statusCode': 200,
+                'body': json.dumps({'task_id': task_id, 'description': description}),
+                'headers': {'Content-Type': 'application/json'}
+            }
+        
+        elif http_method == 'DELETE' and path.startswith('/tasks/'):
+            task_id = path.split('/')[-1]
+            table.delete_item(Key={'task_id': task_id})
+            return {
+                'statusCode': 200,
+                'body': json.dumps({'message': f'Task {task_id} deleted'}),
+                'headers': {'Content-Type': 'application/json'}
+            }
+        
+        else:
+            return {
+                'statusCode': 400,
+                'body': json.dumps({'message': f'Unsupported method {http_method} or path {path}'}),
+                'headers': {'Content-Type': 'application/json'}
+            }
+            
+    except Exception as e:
+        # Log the error for CloudWatch
+        print(f"Error: {str(e)}")
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'message': 'Internal Server Error', 'error': str(e)}),
+            'headers': {'Content-Type': 'application/json'}
+        }
