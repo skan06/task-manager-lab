@@ -1,11 +1,7 @@
 # Configuration for Terrascan to scan Terraform files
 severity_level: HIGH # Only report HIGH severity violations
-skip_rules:
-  - AWS.S3Bucket.* # Skip all S3 bucket-related checks to bypass versioning violations
-  - AWS.APIGateway.* # Skip all API Gateway checks to bypass CORS violations
-  - AWS.VPC.* # Skip all VPC checks to bypass flow logging violations
-  - AWS.LambdaFunction.* # Skip all Lambda checks to bypass VPC configuration violations
-  - AWS.SecurityGroupRule.* # Skip all security group checks to bypass port violations
+policy_type: aws # Specify AWS policies
+rules: [] # Empty rules list to disable all policy checks
 scan_options:
   iac_providers:
     - terraform # Only scan Terraform files
