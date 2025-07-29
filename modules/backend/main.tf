@@ -1,3 +1,8 @@
+# Data source to reference existing CloudWatch log group for Lambda
+data "aws_cloudwatch_log_group" "lambda_logs" {
+  name = "/aws/lambda/task-manager-function" # Reference existing log group
+}
+
 # Create a KMS key for encrypting Lambda environment variables
 resource "aws_kms_key" "lambda_key" {
   description             = "KMS key for Lambda environment variables" # Description for AWS console
@@ -94,16 +99,10 @@ resource "aws_iam_role_policy" "lambda_dynamodb_policy" {
           "logs:CreateLogStream",               # Ensure log stream creation
           "logs:PutLogEvents"                   # Ensure log event writing
         ]
-        Resource = "*"                          # Allow on all CloudWatch logs
+        Resource = "${data.aws_cloudwatch_log_group.lambda_logs.arn}:*" # Reference existing log group
       }
     ]
   })
-}
-
-# Create a CloudWatch log group for Lambda logs
-resource "aws_cloudwatch_log_group" "lambda_logs" {
-  name              = "/aws/lambda/task-manager-function" # Log group for Lambda
-  retention_in_days = 7                                  # Retain logs for 7 days
 }
 
 # Create a Lambda function for task management
@@ -135,8 +134,7 @@ resource "aws_lambda_function" "task_manager_lambda" {
   }
   depends_on = [
     aws_iam_role_policy_attachment.lambda_logs,                    # Ensure IAM role policy is attached
-    aws_iam_role_policy.lambda_dynamodb_policy,                    # Ensure DynamoDB and EC2 policy is attached
-    aws_cloudwatch_log_group.lambda_logs                           # Ensure log group is created
+    aws_iam_role_policy.lambda_dynamodb_policy                     # Ensure DynamoDB and EC2 policy is attached
   ]
 }
 
