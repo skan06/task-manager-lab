@@ -1,5 +1,4 @@
-# Output the API Gateway endpoint URL
+# Output the API Gateway endpoint for use by the frontend module
 output "api_endpoint" {
-  description = "API Gateway URL"                     # Description of the output
-  value       = aws_apigatewayv2_api.task_api.api_endpoint # Value from API Gateway
+  value = aws_apigatewayv2_api.task_api.api_endpoint # URL of the API Gateway
 }
