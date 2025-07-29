@@ -10,15 +10,17 @@ table = dynamodb.Table(table_name)
 
 def lambda_handler(event, context):
     """
-    Handle API Gateway requests for task management.
+    Handle API Gateway v2 HTTP API requests for task management.
     Supports POST, GET, PUT, DELETE methods for /tasks and /tasks/{task_id} routes.
     """
     try:
         # Log the incoming event for debugging
         print(f"Event: {json.dumps(event)}")
         
-        http_method = event.get('httpMethod')
-        path = event.get('path', '')
+        # Extract httpMethod and path from API Gateway v2 event structure
+        request_context = event.get('requestContext', {}).get('http', {})
+        http_method = request_context.get('method')
+        path = request_context.get('path', '')
         
         if http_method == 'POST' and path == '/tasks':
             body = json.loads(event.get('body', '{}'))
@@ -26,7 +28,8 @@ def lambda_handler(event, context):
             if not description:
                 return {
                     'statusCode': 400,
-                    'body': json.dumps({'message': 'Missing description in request body'})
+                    'body': json.dumps({'message': 'Missing description in request body'}),
+                    'headers': {'Content-Type': 'application/json'}
                 }
             task_id = str(uuid.uuid4())
             table.put_item(Item={'task_id': task_id, 'description': description})
@@ -52,7 +55,8 @@ def lambda_handler(event, context):
             if not description:
                 return {
                     'statusCode': 400,
-                    'body': json.dumps({'message': 'Missing description in request body'})
+                    'body': json.dumps({'message': 'Missing description in request body'}),
+                    'headers': {'Content-Type': 'application/json'}
                 }
             table.update_item(
                 Key={'task_id': task_id},
