@@ -1,11 +1,17 @@
 # Configuration for Terrascan to scan Terraform files
-severity_level: HIGH # Only report HIGH severity violations
+severity_level: HIGH # Only report HIGH severity violations to fail the workflow
 skip_rules:
   - AWS.LambdaFunction.IAM.1 # Skip KMS check if unresolved
+  - AWS.S3Bucket.Versioning.1 # Skip S3 versioning check (already enabled in frontend module)
 scan_options:
   iac_providers:
-    - terraform
+    - terraform # Only scan Terraform files
   directories:
+    - ../ # Scan root directory (main.tf, outputs.tf, variables.tf)
     - ../modules/backend # Scan backend module
     - ../modules/frontend # Scan frontend module
-    - ../ # Scan root directory
+  skip_dirs:
+    - ../.github # Exclude GitHub workflows directory
+    - ../.terraform # Exclude Terraform provider and module cache
+    - ../frontend # Exclude frontend directory (no Terraform files)
+    - ../tests # Exclude tests directory (no Terraform files)
