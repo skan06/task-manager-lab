@@ -56,7 +56,7 @@ resource "aws_iam_role_policy_attachment" "lambda_logs" {
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole" # Policy for CloudWatch logging
 }
 
-# Custom policy to allow Lambda to interact with DynamoDB, KMS, and EC2 for VPC
+# Custom policy to allow Lambda to interact with DynamoDB and KMS
 resource "aws_iam_role_policy" "lambda_dynamodb_policy" {
   name = "lambda-dynamodb-policy"                # Policy name
   role = aws_iam_role.lambda_exec_role.id        # Attach to Lambda role
@@ -71,7 +71,7 @@ resource "aws_iam_role_policy" "lambda_dynamodb_policy" {
           "dynamodb:UpdateItem",
           "dynamodb:DeleteItem",
           "dynamodb:Scan",
-          "dynamodb:Query"                        # Added Query for additional DynamoDB operations
+          "dynamodb:Query"                        # Support for DynamoDB operations
         ]
         Resource = aws_dynamodb_table.task_table.arn # Access to DynamoDB table
       },
@@ -80,18 +80,9 @@ resource "aws_iam_role_policy" "lambda_dynamodb_policy" {
         Action   = [
           "kms:Encrypt",
           "kms:Decrypt",
-          "kms:GenerateDataKey"                  # Added for KMS key operations
+          "kms:GenerateDataKey"                  # KMS key operations
         ]
         Resource = aws_kms_key.lambda_key.arn    # KMS key ARN
-      },
-      {
-        Effect = "Allow"
-        Action = [
-          "ec2:CreateNetworkInterface",          # Create ENI for Lambda in VPC
-          "ec2:DescribeNetworkInterfaces",       # Describe ENIs for management
-          "ec2:DeleteNetworkInterface"           # Delete ENIs when Lambda terminates
-        ]
-        Resource = "*"                           # Allow on all resources (required for ENI)
       },
       {
         Effect = "Allow"
@@ -122,18 +113,11 @@ resource "aws_lambda_function" "task_manager_lambda" {
   tracing_config {
     mode = "Active"                                                 # Enable AWS X-Ray tracing
   }
-  timeout       = 30                                                # Increase timeout to 30 seconds
-  memory_size   = 256                                               # Increase memory for better performance
-  dynamic "vpc_config" {
-    for_each = length(var.subnet_ids) > 0 && length(var.security_group_ids) > 0 ? [1] : [] # Only include if subnets and SGs provided
-    content {
-      subnet_ids         = var.subnet_ids                           # Subnets for VPC configuration
-      security_group_ids = var.security_group_ids                   # Security groups for VPC
-    }
-  }
+  timeout       = 30                                                # Timeout set to 30 seconds
+  memory_size   = 256                                               # Memory for better performance
   depends_on = [
     aws_iam_role_policy_attachment.lambda_logs,                    # Ensure IAM role policy is attached
-    aws_iam_role_policy.lambda_dynamodb_policy                     # Ensure DynamoDB and EC2 policy is attached
+    aws_iam_role_policy.lambda_dynamodb_policy                     # Ensure DynamoDB policy is attached
   ]
 }
 
