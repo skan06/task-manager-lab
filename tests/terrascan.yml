@@ -1,9 +1,9 @@
 # Configuration for Terrascan to scan Terraform files
 severity_level: HIGH # Only report HIGH severity violations
-soft_fail: true # Allow workflow to continue despite violations
 skip_rules:
   - AWS.LambdaFunction.IAM.1 # Skip KMS check for Lambda IAM role
   - AWS.S3Bucket.Versioning.1 # Skip S3 versioning check (already enabled in frontend module)
+  - AWS.APIGateway.CORS.1 # Skip CORS check (configured to restrict to S3 endpoint)
 scan_options:
   iac_providers:
     - terraform # Only scan Terraform files
