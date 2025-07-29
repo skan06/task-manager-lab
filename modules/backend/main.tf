@@ -126,9 +126,10 @@ resource "aws_apigatewayv2_api" "task_api" {
   name          = "task-manager-api"                                # API name
   protocol_type = "HTTP"                                            # HTTP protocol for API Gateway
   cors_configuration {
-    allow_origins = ["http://${var.s3_website_endpoint}"]          # Restrict CORS to S3 website
+    allow_origins = [var.s3_website_endpoint != "" ? "http://${var.s3_website_endpoint}" : "http://localhost"] # Restrict to S3 website or localhost for testing
     allow_methods = ["OPTIONS", "POST", "GET", "PUT", "DELETE"]    # Allowed HTTP methods
     allow_headers = ["Content-Type", "Authorization"]              # Allowed headers
+    expose_headers = []                                            # No exposed headers
     max_age       = 3600                                          # CORS cache duration (1 hour)
   }
 }
