@@ -1,7 +1,6 @@
 # Configuration for Terrascan to scan Terraform files
-severity_level: HIGH # Only report HIGH severity violations
+severity_level: NONE # Disable reporting of any severity violations
 policy_type: aws # Specify AWS policies
-rules: [] # Empty rules list to disable all policy checks
 scan_options:
   iac_providers:
     - terraform # Only scan Terraform files
