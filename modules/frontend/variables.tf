@@ -1,11 +1,17 @@
 # Variable for AWS region
 variable "aws_region" {
-  description = "AWS region to deploy"
-  type        = string
+  type    = string
+  default = "us-east-1" # Default region
 }
 
 # Variable for API Gateway endpoint
 variable "api_endpoint" {
-  description = "API Gateway endpoint URL" # Description of the variable
-  type        = string                   # Variable type
+  type    = string
+  default = ""
+}
+
+# Variable for random suffix to ensure unique bucket name
+variable "suffix" {
+  type    = string
+  default = ""
 }
