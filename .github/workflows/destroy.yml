@@ -36,3 +36,4 @@ jobs:
       # Destroy all Terraform-managed resources with auto-approval
       - name: Terraform Destroy
         run: terraform destroy -auto-approve
+        

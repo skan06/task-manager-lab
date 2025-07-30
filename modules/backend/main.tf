@@ -102,7 +102,7 @@ resource "aws_lambda_function" "task_manager_lambda" {
   handler          = "lambda_function.lambda_handler"                 # Handler function in code
   runtime          = "python3.12"                                    # Python runtime version
   filename         = "${path.module}/../../lambda_function.zip"       # Path to zipped Lambda code
-  source_code_hash = filebase64sha256("${path.module}/../../lambda_function.zip") # Code hash for updates
+  source_code_hash = fileexists("${path.module}/../../lambda_function.zip") ? filebase64sha256("${path.module}/../../lambda_function.zip") : "" # Skip hash if file missing during destroy
   role             = aws_iam_role.lambda_exec_role.arn                # IAM role for Lambda
   environment {
     variables = {
