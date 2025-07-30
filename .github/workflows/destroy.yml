@@ -10,15 +10,19 @@ jobs:
     name: Terraform Destroy
     runs-on: ubuntu-latest # Use Ubuntu runner for compatibility
     steps:
-      # Checkout the repository to access Terraform files
+      # Checkout the repository to access Terraform files and lambda_function.zip
       - uses: actions/checkout@v3
+
+      # Debug: List files to verify lambda_function.zip presence
+      - name: List Repository Files
+        run: ls -la
 
       # Configure AWS credentials for Terraform to interact with AWS
       - uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }} # AWS access key stored in GitHub Secrets
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }} # AWS secret key stored in GitHub Secrets
-          aws-region: us-east-1 # AWS region matching your deployment
+          aws-region: us-east-1 # AWS region matching deployment
 
       # Set up Terraform with the specified version
       - uses: hashicorp/setup-terraform@v2
