@@ -23,15 +23,3 @@ module "frontend" {
   api_endpoint = module.backend.api_endpoint          # Pass API Gateway endpoint
   aws_region   = var.aws_region                      # Pass AWS region
 }
-
-# Output the API Gateway endpoint
-output "api_endpoint" {
-  description = "The endpoint of the API Gateway"
-  value       = module.backend.api_endpoint           # Reference backend module output
-}
-
-# Output the S3 website endpoint
-output "s3_website_endpoint" {
-  description = "The endpoint of the S3 website"
-  value       = module.frontend.s3_website_endpoint   # Reference frontend module output
-}
