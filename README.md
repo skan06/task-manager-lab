@@ -1,43 +1,56 @@
-Task Manager Lab
+🗂️ Task Manager Lab
 
-This project is a serverless task management application built using AWS services, Terraform, and GitHub Actions. It features a backend API for managing tasks and a web-based frontend, following Infrastructure-as-Code and DevOps best practices.
+This project is a serverless full-stack CRUD application for task management, built using AWS, Terraform, and GitHub Actions. It follows Infrastructure-as-Code (IaC) and DevOps best practices to ensure automation, scalability, and maintainability.
 
 📌 Overview
+The Task Manager app enables users to:
 
-- The application allows users to:
-- Create, view, update, and delete tasks.
-- Interact through a React-based UI hosted on AWS S3.
-- Access the backend via a REST API powered by AWS Lambda and API Gateway.
+🔹 Create, read, update, and delete (CRUD) tasks.
+🔹 Interact through a React-based UI hosted on Amazon S3.
+🔹 Access the backend via a RESTful API built with AWS Lambda and API Gateway.
+🔹 Persist data using Amazon DynamoDB.
 
 🏗️ Technologies & Tools
+AWS Services
+🔹 Lambda (Python) – backend logic
+🔹 API Gateway – REST endpoints
+🔹 DynamoDB – task storage
+🔹 S3 – static frontend hosting
+🔹 IAM, KMS – access control and encryption
+🔹 CloudWatch & X-Ray – monitoring & tracing
 
-- AWS Services: Lambda, API Gateway, DynamoDB, S3, IAM, KMS, CloudWatch, X-Ray.
-- Terraform: Modular architecture for infrastructure provisioning.
-- CI/CD: GitHub Actions automates deployment and destruction.
+Infrastructure & Automation
+🔹 Terraform – modular provisioning of AWS infrastructure
+🔹 GitHub Actions – CI/CD for deployment and teardown
 
-Testing:
-
-- Backend: Automated with Go.
-- Security: Scanned with Checkov and Terrascan.
+Testing & Security
+🔹 Go – unit testing with Terratest
+🔹 Checkov & Terrascan – IaC security scanning
 
 🧪 Testing & Automation
-
-- Full backend and security test coverage.
-- GitHub Actions runs Go unit tests and security scans during deployment.
-- Manual and automated workflows for apply and destroy.
+🔹 Automated Go tests cover backend behavior.
+🔹 GitHub Actions pipeline runs tests and security scans on every push.
+🔹 Manual and automatic workflows for Terraform apply and destroy.
 
 🔧 Project Structure
-
-- Modularized Terraform (/modules/backend, /modules/frontend)
-- Lambda in Python for API logic.
-- Static frontend in /frontend (HTML/CSS/JS).
-- GitHub Actions workflows under .github/workflows/.
+task-manager-lab/
+├── frontend/                  # React UI (HTML/CSS/JS)
+├── lambda/                   # Python Lambda backend
+├── modules/
+│   ├── backend/              # Terraform module: Lambda, API, DynamoDB
+│   └── frontend/             # Terraform module: S3 hosting
+├── tests/                    # Terratest Go tests
+├── .github/workflows/        # CI/CD with GitHub Actions
+├── main.tf, variables.tf     # Root Terraform configs
 
 🔗 Links
+🌐 GitHub Repository:
+https://github.com/skan06/task-manager-lab
 
-- GitHub Repo: https://github.com/skan06/task-manager-lab
-- Live UI (S3): task-manager-frontend-58d68d01.s3-website-us-east-1.amazonaws.com
-- API Endpoint: Output from Terraform (dynamic)
+🌐 Live Frontend (S3):
+task-manager-frontend-58d68d01.s3-website-us-east-1.amazonaws.com
 
-Author: Skander Houidi
+🌐 API Endpoint:
+Provisioned dynamically via Terraform output
 
+👨‍💻 Author: Skander Houidi
